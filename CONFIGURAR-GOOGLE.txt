@@ -1,0 +1,183 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║  📋 GUÍA PASO A PASO - Configurar Google Service Account                ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Estás en Google Cloud Console. Sigue estos pasos:
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 1: CREAR UN PROYECTO (si no tienes uno)
+═══════════════════════════════════════════════════════════════════════════
+
+1. En la parte superior, haz clic en el selector de proyecto
+2. Click en "NUEVO PROYECTO"
+3. Nombre del proyecto: "whatsapp-terrenos" (o el que prefieras)
+4. Click en "CREAR"
+5. Espera unos segundos y selecciona el proyecto
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 2: HABILITAR LAS APIs NECESARIAS
+═══════════════════════════════════════════════════════════════════════════
+
+1. En el menú lateral (☰), ve a: "APIs y servicios" → "Biblioteca"
+   
+2. Busca y habilita estas 3 APIs (una por una):
+   
+   a) Google Docs API
+      - Busca: "Google Docs API"
+      - Click en el resultado
+      - Click en "HABILITAR"
+   
+   b) Google Sheets API
+      - Busca: "Google Sheets API"
+      - Click en el resultado
+      - Click en "HABILITAR"
+   
+   c) Google Calendar API
+      - Busca: "Google Calendar API"
+      - Click en el resultado
+      - Click en "HABILITAR"
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 3: CREAR LA CUENTA DE SERVICIO (SERVICE ACCOUNT)
+═══════════════════════════════════════════════════════════════════════════
+
+1. En el menú lateral (☰), ve a: "APIs y servicios" → "Credenciales"
+
+2. Click en el botón "+ CREAR CREDENCIALES" (arriba)
+
+3. Selecciona: "Cuenta de servicio"
+
+4. Completa el formulario:
+   - Nombre de la cuenta de servicio: "whatsapp-agent"
+   - ID de la cuenta: (se genera automáticamente)
+   - Descripción: "Agente WhatsApp con acceso a Docs, Sheets y Calendar"
+
+5. Click en "CREAR Y CONTINUAR"
+
+6. En "Otorgar acceso a esta cuenta de servicio", puedes:
+   - Dejar en blanco o seleccionar "Editor" (opcional)
+   - Click en "CONTINUAR"
+
+7. En "Otorgar acceso a los usuarios":
+   - Dejar en blanco
+   - Click en "LISTO"
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 4: DESCARGAR EL ARCHIVO JSON DE CREDENCIALES
+═══════════════════════════════════════════════════════════════════════════
+
+1. En la lista de "Cuentas de servicio", busca la que acabas de crear
+
+2. Click en el EMAIL de la cuenta de servicio
+   (ejemplo: whatsapp-agent@tu-proyecto.iam.gserviceaccount.com)
+
+3. Ve a la pestaña "CLAVES" (Keys)
+
+4. Click en "AGREGAR CLAVE" → "Crear clave nueva"
+
+5. Selecciona formato: "JSON"
+
+6. Click en "CREAR"
+
+7. ⬇️ Se descargará automáticamente un archivo JSON
+   (ejemplo: tu-proyecto-123456-abcdef123456.json)
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 5: COPIAR EL EMAIL DE LA CUENTA DE SERVICIO
+═══════════════════════════════════════════════════════════════════════════
+
+📧 IMPORTANTE: Copia el email de la cuenta de servicio que aparece en la lista.
+   
+   Se ve algo así:
+   whatsapp-agent@tu-proyecto-123456.iam.gserviceaccount.com
+   
+   Lo necesitarás para el siguiente paso.
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 6: GUARDAR EL ARCHIVO JSON EN EL PROYECTO
+═══════════════════════════════════════════════════════════════════════════
+
+1. Busca el archivo JSON que se descargó (en tu carpeta de Descargas)
+
+2. Renómbralo a: google-credentials.json
+
+3. Muévelo a la carpeta del proyecto:
+   /home/josealfredo/whatsapp-terrenos-mcp/google-credentials.json
+
+   Puedes hacerlo desde la terminal:
+   
+   # Si está en Descargas:
+   mv ~/Downloads/tu-proyecto-*.json /home/josealfredo/whatsapp-terrenos-mcp/google-credentials.json
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 7: COMPARTIR TUS GOOGLE DOCS, SHEETS Y CALENDAR
+═══════════════════════════════════════════════════════════════════════════
+
+Ahora debes dar acceso a la cuenta de servicio a tus documentos:
+
+A) GOOGLE DOCS (Base de conocimiento)
+   ────────────────────────────────────
+   1. Abre: https://docs.google.com/document/d/1CWRkJNcsScJOK-NMxtxnUdpuxrYcqaru5qiu9rHzbbw
+   2. Click en "Compartir" (esquina superior derecha)
+   3. Pega el email de la cuenta de servicio
+   4. Selecciona permiso: "Lector" (Viewer)
+   5. Desmarca "Notificar a las personas"
+   6. Click en "Compartir"
+
+B) GOOGLE SHEETS (Formulario de clientes)
+   ────────────────────────────────────
+   1. Abre: https://docs.google.com/spreadsheets/d/1-YTVjIqYO-m1XS_t_MRUlE7O4u_8WXKiZTQLh8BrhSE
+   2. Click en "Compartir"
+   3. Pega el email de la cuenta de servicio
+   4. Selecciona permiso: "Editor" (Editor)
+   5. Desmarca "Notificar a las personas"
+   6. Click en "Compartir"
+
+C) GOOGLE CALENDAR (Agendamiento de citas)
+   ────────────────────────────────────
+   1. Abre: https://calendar.google.com
+   2. En el panel izquierdo, busca tu calendario
+   3. Click en los 3 puntos (⋮) junto al nombre del calendario
+   4. Click en "Configuración y uso compartido"
+   5. Scroll hasta "Compartir con personas específicas"
+   6. Click en "+ Agregar personas"
+   7. Pega el email de la cuenta de servicio
+   8. Selecciona permiso: "Hacer cambios en eventos"
+   9. Click en "Enviar"
+
+═══════════════════════════════════════════════════════════════════════════
+PASO 8: VERIFICAR QUE TODO ESTÁ LISTO
+═══════════════════════════════════════════════════════════════════════════
+
+Ejecuta este comando para verificar que el archivo existe:
+
+ls -lh google-credentials.json
+
+Deberías ver algo como:
+-rw-r--r-- 1 josealfredo josealfredo 2.3K Nov  9 12:00 google-credentials.json
+
+═══════════════════════════════════════════════════════════════════════════
+🚀 LISTO PARA INICIAR EL SERVIDOR
+═══════════════════════════════════════════════════════════════════════════
+
+Ahora sí puedes ejecutar:
+
+npm run dev
+
+El servidor se iniciará y:
+✅ Cargará las credenciales de Google
+✅ Conectará con Google Docs, Sheets y Calendar
+✅ Estará listo para recibir mensajes de WhatsApp
+
+Abre en tu navegador: http://localhost:3000
+
+═══════════════════════════════════════════════════════════════════════════
+
+¿TIENES EL ARCHIVO JSON YA DESCARGADO?
+
+Si ya lo tienes descargado, dime y te ayudo a moverlo a la carpeta correcta.
+Si aún no lo has descargado, sigue los pasos 3 y 4 arriba.
+
+═══════════════════════════════════════════════════════════════════════════

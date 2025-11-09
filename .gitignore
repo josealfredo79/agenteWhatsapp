@@ -1,0 +1,58 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Credenciales de Google
+google-credentials.json
+*.json.key
+service-account*.json
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+
+# Temporal
+tmp/
+temp/
+*.tmp
+
+# Build
+dist/
+build/
+
+# PM2
+.pm2/
+ecosystem.config.js
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Archivos específicos del proyecto
+test-data/
+*.backup
+nohup.out
+ngrok.log
+*.log

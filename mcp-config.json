@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "whatsapp-terrenos": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

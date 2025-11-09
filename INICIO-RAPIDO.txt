@@ -1,0 +1,119 @@
+╔════════════════════════════════════════════════════════════════╗
+║  🚀 INICIO RÁPIDO - Agente WhatsApp con Claude AI             ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 PASOS PARA EMPEZAR:
+
+1️⃣  CONFIGURAR GOOGLE SERVICE ACCOUNT (IMPORTANTE)
+   ────────────────────────────────────────────────────────
+   • Ve a: https://console.cloud.google.com/
+   • Crea un proyecto nuevo
+   • Habilita APIs: Google Docs, Sheets y Calendar
+   • Crea Service Account y descarga JSON
+   • Guarda el JSON como: google-credentials.json
+   • Comparte tus Docs/Sheets/Calendar con el email del Service Account
+   
+   📝 Ejemplo email: mi-servicio@proyecto-123456.iam.gserviceaccount.com
+
+2️⃣  VERIFICAR ARCHIVO .ENV
+   ────────────────────────────────────────────────────────
+   ✅ El archivo .env ya está creado con tus credenciales:
+      • Twilio configurado
+      • Claude AI configurado
+      • Google Docs ID configurado
+      • Google Sheets ID configurado
+   
+   ⚠️  FALTA: Crear el archivo google-credentials.json (paso 1)
+
+3️⃣  INICIAR EL SERVIDOR
+   ────────────────────────────────────────────────────────
+   
+   # Modo desarrollo (recomendado)
+   npm run dev
+   
+   # O modo producción
+   npm start
+   
+   🌐 Interfaz: http://localhost:3000
+
+4️⃣  CONFIGURAR WEBHOOK DE TWILIO
+   ────────────────────────────────────────────────────────
+   
+   Para desarrollo local, usa ngrok:
+   
+   # En otra terminal
+   npx ngrok http 3000
+   
+   Luego configura en Twilio Console:
+   https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn
+   
+   Webhook URL: https://tu-url-ngrok.ngrok.io/webhook/whatsapp
+
+5️⃣  PROBAR EL SISTEMA
+   ────────────────────────────────────────────────────────
+   
+   # Ejecutar suite de pruebas
+   npm test
+   
+   # O probar desde WhatsApp:
+   # 1. Únete al sandbox enviando: join <codigo>
+   # 2. Envía un mensaje de prueba
+   # 3. Observa la respuesta del agente IA
+
+6️⃣  USAR SERVIDOR MCP (OPCIONAL)
+   ────────────────────────────────────────────────────────
+   
+   # Ejecutar servidor MCP
+   npm run mcp
+   
+   Herramientas disponibles:
+   • get_knowledge_base
+   • save_to_sheet
+   • create_calendar_event
+   • analyze_conversation
+   • Y más...
+
+╔════════════════════════════════════════════════════════════════╗
+║  📚 DOCUMENTACIÓN COMPLETA: README.md                         ║
+╚════════════════════════════════════════════════════════════════╝
+
+🎯 COMANDOS DISPONIBLES:
+
+  npm start       → Iniciar servidor (producción)
+  npm run dev     → Iniciar servidor (desarrollo con auto-reload)
+  npm test        → Ejecutar suite de pruebas
+  npm run mcp     → Iniciar servidor MCP
+
+📁 ARCHIVOS IMPORTANTES:
+
+  server.js              → Servidor Express principal
+  mcp-server.js          → Servidor MCP con herramientas
+  public/index.html      → Interfaz web
+  .env                   → Variables de entorno (YA CREADO)
+  google-credentials.json → Credenciales Google (CREAR MANUALMENTE)
+
+⚠️  IMPORTANTE ANTES DE EMPEZAR:
+
+  1. Crear google-credentials.json (paso 1 arriba)
+  2. Compartir Docs/Sheets/Calendar con Service Account
+  3. Verificar que .env tenga todas las credenciales
+
+💡 TIPS:
+
+  • Revisa README.md para instrucciones detalladas
+  • La interfaz web se actualiza en tiempo real
+  • El agente aprende de tu Google Doc automáticamente
+  • Todos los datos se guardan en Google Sheets
+
+🆘 PROBLEMAS?
+
+  • Revisa la sección Troubleshooting en README.md
+  • Verifica que todas las APIs estén habilitadas
+  • Comprueba que el Service Account tenga permisos
+
+════════════════════════════════════════════════════════════════
+
+✨ ¡Todo listo! Ahora crea el google-credentials.json y ejecuta:
+
+    npm run dev
+
