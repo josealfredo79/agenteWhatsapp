@@ -55,4 +55,8 @@ test-data/
 *.backup
 nohup.out
 ngrok.log
-*.log
+tunnel.log
+server.log
+
+# Railway
+.railway/
