@@ -1,0 +1,119 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║           🚀 COMANDOS RÁPIDOS - AGENTE WHATSAPP           ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+📋 GESTIÓN DEL SISTEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶️  Iniciar todo el sistema:
+    ./sistema.sh
+
+▶️  Iniciar solo el servidor:
+    cd /home/josealfredo/whatsapp-terrenos-mcp
+    node server.js > server.log 2>&1 &
+
+▶️  Iniciar solo LocalTunnel:
+    lt --port 3000 --subdomain agentewhatsapp &
+
+⏹️  Detener el servidor:
+    pkill -f "node server.js"
+
+⏹️  Detener LocalTunnel:
+    pkill lt
+
+
+📊 MONITOREO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👀 Ver logs en tiempo real:
+    tail -f server.log
+
+👀 Ver últimas 50 líneas:
+    tail -50 server.log
+
+👀 Ver estado de procesos:
+    ps aux | grep -E "node server.js|lt --port"
+
+👀 Ver puerto 3000:
+    lsof -i :3000
+
+
+🔧 SOLUCIÓN DE PROBLEMAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 Reiniciar servidor:
+    pkill -f "node server.js"
+    sleep 2
+    cd /home/josealfredo/whatsapp-terrenos-mcp
+    node server.js > server.log 2>&1 &
+
+🔄 Reiniciar LocalTunnel:
+    pkill lt
+    sleep 2
+    lt --port 3000 --subdomain agentewhatsapp &
+
+🔄 Reiniciar todo:
+    pkill -f "node server.js"
+    pkill lt
+    sleep 3
+    cd /home/josealfredo/whatsapp-terrenos-mcp
+    node server.js > server.log 2>&1 &
+    lt --port 3000 --subdomain agentewhatsapp &
+
+🔍 Verificar conectividad:
+    curl http://localhost:3000
+    curl https://agentewhatsapp.loca.lt
+
+
+🌐 URLs IMPORTANTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Webhook (para Twilio):
+    https://agentewhatsapp.loca.lt/webhook/whatsapp
+
+🌐 Panel Web:
+    http://localhost:3000
+
+📊 Google Sheets:
+    https://docs.google.com/spreadsheets/d/1-YTVjIqYO-m1XS_t_MRUlE7O4u_8WXKiZTQLh8BrhSE
+
+📄 Google Docs (Base de conocimiento):
+    https://docs.google.com/document/d/1CWRkJNcsScJOK-NMxtxnUdpuxrYcqaru5qiu9rHzbbw
+
+🔧 Twilio Console:
+    https://console.twilio.com/
+
+
+📞 INFORMACIÓN DE CONTACTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 Número Twilio:           +1 (217) 387-4424
+📱 WhatsApp Sandbox:        +1 (415) 523-8886
+
+
+💡 TIPS RÁPIDOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ Usar el script sistema.sh para gestión fácil
+✨ Revisar logs regularmente para detectar errores
+✨ Si LocalTunnel se desconecta, solo reiniciarlo
+✨ Mantener las credenciales seguras
+✨ Actualizar la base de conocimiento en Google Docs
+✨ Revisar conversaciones en Google Sheets
+
+
+⚠️  NOTAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  LocalTunnel puede desconectarse. Si ocurre, reiniciar.
+⚠️  No compartir google-credentials.json públicamente.
+⚠️  El servidor debe estar corriendo para recibir mensajes.
+⚠️  Verificar que la URL del webhook esté actualizada en Twilio.
+
+
+═══════════════════════════════════════════════════════════
+
+Para documentación completa: ver CONFIGURACION-FINAL.md
+Para el menú interactivo: ejecutar ./sistema.sh
