@@ -11,10 +11,34 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-dotenv.config();
+// Cargar variables de entorno (solo si existe .env)
+dotenv.config({ path: '.env' });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Log de debug para Railway
+console.log('🔍 Verificando variables de entorno...');
+console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID ? '✅ Configurado' : '❌ NO configurado');
+console.log('TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN ? '✅ Configurado' : '❌ NO configurado');
+console.log('ANTHROPIC_API_KEY:', process.env.ANTHROPIC_API_KEY ? '✅ Configurado' : '❌ NO configurado');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+
+// Validar variables requeridas
+const requiredEnvVars = [
+  'TWILIO_ACCOUNT_SID',
+  'TWILIO_AUTH_TOKEN',
+  'TWILIO_WHATSAPP_NUMBER',
+  'ANTHROPIC_API_KEY'
+];
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.error('❌ ERROR: Faltan las siguientes variables de entorno:');
+  missingVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('\n💡 Configúralas en Railway Dashboard > Variables');
+  process.exit(1);
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -32,10 +56,12 @@ app.use(bodyParser.json());
 app.use(express.static(join(__dirname, 'public')));
 
 // Configuración de Twilio
+console.log('🔧 Inicializando cliente de Twilio...');
 const twilioClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
+console.log('✅ Cliente de Twilio inicializado');
 
 // Configuración de Claude AI
 const anthropic = new Anthropic({
