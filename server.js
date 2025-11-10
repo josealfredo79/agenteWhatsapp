@@ -274,7 +274,7 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
     ];
     
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20240620', // Modelo con tool use
+      model: 'claude-3-sonnet-20240229', // Modelo estable con tool use
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: messages,
@@ -307,7 +307,7 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
         
         // Obtener respuesta final de Claude con el resultado
         const finalResponse = await anthropic.messages.create({
-          model: 'claude-3-5-sonnet-20240620',
+          model: 'claude-3-sonnet-20240229',
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           messages: followUpMessages,
