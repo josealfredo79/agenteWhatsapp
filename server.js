@@ -75,7 +75,19 @@ let sheets;
 let calendar;
 
 try {
-  const credentials = JSON.parse(readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_FILE));
+  let credentials;
+  
+  // Soporte para Railway (GOOGLE_CREDENTIALS como JSON string) y local (archivo)
+  if (process.env.GOOGLE_CREDENTIALS) {
+    console.log('🔧 Usando GOOGLE_CREDENTIALS de variable de entorno...');
+    credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  } else if (process.env.GOOGLE_SERVICE_ACCOUNT_FILE) {
+    console.log('🔧 Usando archivo de credenciales local...');
+    credentials = JSON.parse(readFileSync(process.env.GOOGLE_SERVICE_ACCOUNT_FILE));
+  } else {
+    throw new Error('No se encontraron credenciales de Google');
+  }
+  
   googleAuth = new google.auth.GoogleAuth({
     credentials,
     scopes: [
@@ -90,9 +102,11 @@ try {
   calendar = google.calendar({ version: 'v3', auth: googleAuth });
   
   console.log('✅ Google APIs configuradas correctamente');
+  console.log('   Service Account:', credentials.client_email);
 } catch (error) {
   console.warn('⚠️  Google credentials no encontradas. Algunas funciones estarán deshabilitadas.');
-  console.warn('   Por favor, configura GOOGLE_SERVICE_ACCOUNT_FILE en .env');
+  console.warn('   Error:', error.message);
+  console.warn('   Configura GOOGLE_CREDENTIALS o GOOGLE_SERVICE_ACCOUNT_FILE');
 }
 
 // Almacenamiento en memoria para conversaciones
