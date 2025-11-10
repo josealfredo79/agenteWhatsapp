@@ -11,6 +11,8 @@ yarn.lock
 .env.local
 .env.*.local
 railway-env.txt
+set-railway-vars.sh
+INSTRUCCIONES-RAILWAY-VARIABLES.md
 
 # Credenciales de Google
 google-credentials.json
