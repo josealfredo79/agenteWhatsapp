@@ -115,6 +115,48 @@ const conversations = new Map();
 // Base de conocimiento desde Google Docs
 let knowledgeBase = '';
 
+// Definición de tools para Claude (Function Calling)
+const CALENDAR_TOOLS = [
+  {
+    name: "agendar_cita",
+    description: "Agenda una cita o visita en Google Calendar. Usa esta función cuando el cliente confirme que desea agendar una visita a una propiedad. Debes tener todos los datos requeridos antes de usar esta función.",
+    input_schema: {
+      type: "object",
+      properties: {
+        nombre_cliente: {
+          type: "string",
+          description: "Nombre completo del cliente"
+        },
+        telefono: {
+          type: "string",
+          description: "Número de teléfono del cliente (incluir código de país si está disponible)"
+        },
+        fecha: {
+          type: "string",
+          description: "Fecha de la cita en formato YYYY-MM-DD (año-mes-día)"
+        },
+        hora: {
+          type: "string",
+          description: "Hora de la cita en formato HH:MM de 24 horas (ejemplo: 14:30 para 2:30 PM)"
+        },
+        propiedad: {
+          type: "string",
+          description: "Nombre o descripción de la propiedad a visitar"
+        },
+        ubicacion: {
+          type: "string",
+          description: "Dirección completa o ubicación de la propiedad"
+        },
+        notas: {
+          type: "string",
+          description: "Notas adicionales o comentarios sobre la cita"
+        }
+      },
+      required: ["nombre_cliente", "fecha", "hora", "propiedad"]
+    }
+  }
+];
+
 // Cargar base de conocimiento
 async function loadKnowledgeBase() {
   if (!docs) {
@@ -156,32 +198,75 @@ ${knowledgeBase || 'Cargando base de conocimiento...'}
 CAPACIDADES Y FUNCIONES:
 1. **Información sobre Terrenos**: Responde consultas sobre propiedades, ubicaciones, precios, características y disponibilidad usando la base de conocimiento proporcionada.
 
-2. **Gestión de Formularios**: Cuando un cliente muestre interés, solicita sus datos de contacto (nombre completo, teléfono, email, propiedad de interés) y confirma que desea que se registren en el sistema.
+2. **Gestión de Formularios**: Cuando un cliente muestre interés, solicita sus datos de contacto (nombre completo, teléfono, email, propiedad de interés).
 
-3. **Agendamiento de Citas**: Ofrece agendar visitas a las propiedades. Solicita fecha y hora preferida, y confirma disponibilidad antes de registrar.
+3. **Agendamiento de Citas AUTOMÁTICO**: Tienes la capacidad de AGENDAR AUTOMÁTICAMENTE visitas a propiedades usando la función "agendar_cita". 
 
-INSTRUCCIONES DE COMPORTAMIENTO:
-- Saluda de manera cordial y profesional
-- Sé claro, conciso y amable en todas tus respuestas
-- Si no tienes información específica, sé honesto y ofrece alternativas
-- Mantén un tono profesional pero cercano
-- Confirma siempre antes de registrar datos o agendar citas
-- Si detectas que el cliente desea registrarse, solicita TODOS los datos necesarios antes de confirmar
-- Para agendar citas, verifica disponibilidad y proporciona opciones si la fecha solicitada no está disponible
+FLUJO DE AGENDAMIENTO DE CITAS:
+PASO 1: Cuando un cliente exprese interés en visitar una propiedad, solicita los siguientes datos:
+   - Nombre completo del cliente
+   - Número de teléfono (si no lo tienes del contexto)
+   - Fecha preferida (acepta formatos como "mañana", "próximo lunes", "15 de noviembre")
+   - Hora preferida (acepta formatos como "3 PM", "15:00", "a las tres")
+   - Propiedad específica de interés
+
+PASO 2: Convierte las fechas naturales a formato YYYY-MM-DD:
+   - "mañana" → calcula la fecha de mañana
+   - "lunes próximo" → calcula el próximo lunes
+   - "15 de noviembre" → 2025-11-15
+
+PASO 3: Convierte horas a formato 24h (HH:MM):
+   - "3 PM" → "15:00"
+   - "10 de la mañana" → "10:00"
+   - "medio día" → "12:00"
+
+PASO 4: Una vez tengas TODOS los datos, confirma con el cliente:
+   "¿Confirmas que deseas agendar la visita a [propiedad] para el [día] [fecha] a las [hora]?"
+
+PASO 5: Si el cliente confirma (dice "sí", "confirmo", "correcto", etc.), USA LA FUNCIÓN "agendar_cita" INMEDIATAMENTE con los datos en el formato correcto:
+   - fecha: "YYYY-MM-DD"
+   - hora: "HH:MM"
+
+PASO 6: Después de que la función se ejecute, informa al cliente sobre el resultado y proporciona detalles de la cita.
+
+INSTRUCCIONES CRÍTICAS:
+- NO digas "voy a contactar a alguien" o "te enviaré información"
+- USA LA FUNCIÓN directamente cuando tengas confirmación del cliente
+- NO inventes fechas u horas, siempre pregunta al cliente
+- Sé proactivo en solicitar los datos faltantes uno por uno
+- Confirma SIEMPRE antes de usar la función
+- Si falta algún dato requerido, solicítalo antes de confirmar
+- Mantén un tono profesional pero cercano y amigable
 
 FORMATO DE RESPUESTA:
 - Usa párrafos cortos y claros
 - Enumera opciones cuando sea apropiado
 - Solicita confirmación para acciones importantes
-- Proporciona información de contacto adicional si es relevante
+- Usa emojis ocasionalmente para hacer la conversación más amigable (📅 ✅ 🏡 📍)
 
 IMPORTANTE:
 - Siempre mantén la privacidad y confidencialidad de los datos del cliente
 - No inventes información que no esté en la base de conocimiento
-- Si necesitas registrar datos o agendar, indícalo claramente en tu respuesta`;
+- La función "agendar_cita" creará automáticamente el evento en el calendario Y enviará recordatorios al cliente
 
-// Función para interactuar con Claude
-async function getChatResponse(userMessage, conversationHistory = []) {
+EJEMPLO DE CONVERSACIÓN:
+Cliente: "Me gustaría ver el terreno en Zapopan"
+Tú: "¡Excelente elección! 🏡 Me encantaría agendarte una visita. ¿Cuál es tu nombre completo?"
+Cliente: "José Alfredo Rodríguez"
+Tú: "Perfecto, José. ¿Qué día te gustaría visitarlo?"
+Cliente: "El viernes"
+Tú: "Entendido, el viernes 15 de noviembre. ¿A qué hora prefieres?"
+Cliente: "Como a las 3 de la tarde"
+Tú: "Perfecto. ¿Me confirmas tu número de teléfono para enviarte los recordatorios?"
+Cliente: "+52 333 123 4567"
+Tú: "Excelente. ¿Confirmas que deseas agendar la visita al terreno en Zapopan para el viernes 15 de noviembre a las 3:00 PM?"
+Cliente: "Sí, confirmo"
+Tú: [USA agendar_cita AQUÍ CON: fecha="2025-11-15", hora="15:00"] 
+     → Espera respuesta de la función →
+     "¡Listo! ✅ Tu cita está confirmada para el viernes 15 de noviembre a las 3:00 PM. Te enviaremos recordatorios automáticos 24 horas antes y 30 minutos antes de la visita. Nos vemos en [ubicación del terreno]. ¿Hay algo más en lo que pueda ayudarte?"`;
+
+// Función para interactuar con Claude (con soporte para Tool Use)
+async function getChatResponse(userMessage, conversationHistory = [], phoneNumber = '') {
   try {
     const messages = [
       ...conversationHistory,
@@ -189,13 +274,53 @@ async function getChatResponse(userMessage, conversationHistory = []) {
     ];
     
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
+      model: 'claude-3-5-sonnet-20241022', // Modelo con tool use
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
-      messages: messages
+      messages: messages,
+      tools: CALENDAR_TOOLS // Agregar tools para agendar citas
     });
     
-    return response.content[0].text;
+    // Verificar si Claude quiere usar una tool
+    if (response.stop_reason === 'tool_use') {
+      const toolUse = response.content.find(block => block.type === 'tool_use');
+      
+      if (toolUse && toolUse.name === 'agendar_cita') {
+        console.log('🔧 Claude solicita agendar cita:', toolUse.input);
+        
+        // Ejecutar la función de agendar
+        const resultado = await agendarCitaAutomatica(toolUse.input, phoneNumber);
+        
+        // Continuar la conversación con el resultado
+        const followUpMessages = [
+          ...messages,
+          { role: 'assistant', content: response.content },
+          {
+            role: 'user',
+            content: [{
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify(resultado)
+            }]
+          }
+        ];
+        
+        // Obtener respuesta final de Claude con el resultado
+        const finalResponse = await anthropic.messages.create({
+          model: 'claude-3-5-sonnet-20241022',
+          max_tokens: 1024,
+          system: SYSTEM_PROMPT,
+          messages: followUpMessages,
+          tools: CALENDAR_TOOLS
+        });
+        
+        return finalResponse.content[0].text;
+      }
+    }
+    
+    // Si no usa tools, devolver respuesta normal
+    const textContent = response.content.find(block => block.type === 'text');
+    return textContent ? textContent.text : response.content[0].text;
   } catch (error) {
     console.error('Error al comunicarse con Claude:', error);
     return 'Disculpa, estoy experimentando dificultades técnicas. Por favor, intenta de nuevo en unos momentos.';
@@ -277,6 +402,70 @@ async function createCalendarEvent(eventData) {
   }
 }
 
+// Función para agendar cita automáticamente desde Claude
+async function agendarCitaAutomatica(params, phoneNumber) {
+  try {
+    const { nombre_cliente, telefono, fecha, hora, propiedad, ubicacion, notas } = params;
+    
+    console.log(`📅 Agendando cita automática para ${nombre_cliente}...`);
+    
+    // Construir fechas ISO para Calendar
+    const fechaInicio = new Date(`${fecha}T${hora}:00-06:00`); // Mexico City timezone
+    const fechaFin = new Date(fechaInicio.getTime() + 60 * 60 * 1000); // +1 hora de duración
+    
+    // Validar que la fecha sea válida
+    if (isNaN(fechaInicio.getTime())) {
+      throw new Error(`Fecha u hora inválida: ${fecha} ${hora}`);
+    }
+    
+    // Crear evento en Google Calendar
+    const evento = await createCalendarEvent({
+      titulo: `Visita: ${propiedad}`,
+      descripcion: `Cliente: ${nombre_cliente}\nTeléfono: ${telefono || phoneNumber}\n\nNotas: ${notas || 'Sin notas adicionales'}`,
+      ubicacion: ubicacion || propiedad,
+      fechaInicio: fechaInicio.toISOString(),
+      fechaFin: fechaFin.toISOString(),
+      asistentes: []
+    });
+    
+    // Guardar también en Google Sheets para registro
+    const telefonoFinal = telefono || phoneNumber.replace('whatsapp:', '');
+    await saveToGoogleSheet({
+      nombre: nombre_cliente,
+      telefono: telefonoFinal,
+      email: '',
+      interes: propiedad,
+      notas: `Cita agendada: ${fecha} ${hora}. ${notas || ''}`
+    });
+    
+    if (evento) {
+      console.log('✅ Cita agendada automáticamente:', evento.htmlLink);
+      return {
+        success: true,
+        mensaje: `Cita confirmada para ${fecha} a las ${hora}`,
+        link: evento.htmlLink,
+        evento: {
+          fecha,
+          hora,
+          propiedad,
+          ubicacion: ubicacion || propiedad
+        }
+      };
+    } else {
+      return {
+        success: false,
+        mensaje: 'No se pudo crear la cita en el calendario'
+      };
+    }
+  } catch (error) {
+    console.error('❌ Error al agendar cita automática:', error);
+    return {
+      success: false,
+      mensaje: `Error: ${error.message}`
+    };
+  }
+}
+
 // Webhook de Twilio para recibir mensajes de WhatsApp
 app.post('/webhook/whatsapp', async (req, res) => {
   const { From, Body, MessageSid } = req.body;
@@ -297,8 +486,8 @@ app.post('/webhook/whatsapp', async (req, res) => {
   });
   
   try {
-    // Obtener respuesta de Claude
-    const aiResponse = await getChatResponse(Body, history);
+    // Obtener respuesta de Claude (pasando phoneNumber para citas)
+    const aiResponse = await getChatResponse(Body, history, phoneNumber);
     
     // Actualizar historial
     history.push(
