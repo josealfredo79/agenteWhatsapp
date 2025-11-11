@@ -236,6 +236,12 @@ PASO 5: Si el cliente confirma (dice "sí", "confirmo", "correcto", etc.), USA L
    - hora: "HH:MM"
 
 PASO 6: Después de que la función se ejecute, informa al cliente sobre el resultado y proporciona detalles de la cita.
+   - Si la cita fue exitosa (success: true), incluye:
+     * Confirmación de fecha y hora
+     * Detalles de la propiedad
+     * Link del evento de Google Calendar (si está disponible en el resultado)
+     * Mensaje sobre recordatorios automáticos
+   - Si hubo algún error, informa amablemente y ofrece alternativas
 
 INSTRUCCIONES CRÍTICAS:
 - NO digas "voy a contactar a alguien" o "te enviaré información"
@@ -271,7 +277,17 @@ Tú: "Excelente. ¿Confirmas que deseas agendar la visita al terreno en Zapopan 
 Cliente: "Sí, confirmo"
 Tú: [USA agendar_cita AQUÍ CON: fecha="2025-11-15", hora="15:00"] 
      → Espera respuesta de la función →
-     "¡Listo! ✅ Tu cita está confirmada para el viernes 15 de noviembre a las 3:00 PM. Te enviaremos recordatorios automáticos 24 horas antes y 30 minutos antes de la visita. Nos vemos en [ubicación del terreno]. ¿Hay algo más en lo que pueda ayudarte?"`;
+     → Si el resultado incluye "link": →
+     "¡Listo! ✅ Tu cita está confirmada para el viernes 15 de noviembre a las 3:00 PM. 
+     
+📅 Puedes ver los detalles y agregarlo a tu calendario aquí:
+[LINK DEL EVENTO]
+
+Te enviaremos recordatorios automáticos 24 horas antes y 30 minutos antes de la visita. Nos vemos en [ubicación del terreno]. ¿Hay algo más en lo que pueda ayudarte?"
+
+INSTRUCCIÓN ESPECIAL PARA LINKS:
+Cuando la función "agendar_cita" devuelva un resultado con "link", SIEMPRE incluye ese link en tu respuesta al cliente.
+Formato: Incluye el link completo en una línea separada para que sea clickeable en WhatsApp.`;
 
 // Función para interactuar con Claude (con soporte para Tool Use)
 async function getChatResponse(userMessage, conversationHistory = [], phoneNumber = '') {
@@ -470,19 +486,20 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Respuesta exitosa si al menos Sheets funcionó
     if (sheetsSaved || evento) {
       const mensaje = evento 
-        ? `Cita confirmada para ${fecha} a las ${hora}. Registro guardado exitosamente.`
+        ? `Cita confirmada para ${fecha} a las ${hora}. ✅ Evento creado en Google Calendar.${evento.htmlLink ? '\n\n📅 Link del evento: ' + evento.htmlLink : ''}`
         : `Cita registrada para ${fecha} a las ${hora}. (Evento de calendario pendiente)`;
       
       console.log('✅ Cita agendada:', mensaje);
       return {
         success: true,
         mensaje,
-        link: evento?.htmlLink,
+        link: evento?.htmlLink || null,
         evento: {
           fecha,
           hora,
           propiedad,
-          ubicacion: ubicacion || propiedad
+          ubicacion: ubicacion || propiedad,
+          calendar_link: evento?.htmlLink || null
         }
       };
     } else {
