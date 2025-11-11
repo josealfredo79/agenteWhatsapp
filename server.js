@@ -40,6 +40,14 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
+// Validar variables opcionales de Google (advertencias, no bloquean)
+const googleVars = ['GOOGLE_DOCS_ID', 'GOOGLE_SHEET_ID', 'GOOGLE_CALENDAR_ID'];
+const missingGoogleVars = googleVars.filter(varName => !process.env[varName]);
+if (missingGoogleVars.length > 0) {
+  console.warn('⚠️  Variables de Google no configuradas (funcionalidad limitada):');
+  missingGoogleVars.forEach(varName => console.warn(`   - ${varName}`));
+}
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -307,14 +315,15 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
         
         // Obtener respuesta final de Claude con el resultado
         const finalResponse = await anthropic.messages.create({
-          model: 'claude-3-sonnet-20240229',
+          model: 'claude-3-5-haiku-20241022',
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           messages: followUpMessages,
           tools: CALENDAR_TOOLS
         });
         
-        return finalResponse.content[0].text;
+        const finalTextContent = finalResponse.content.find(block => block.type === 'text');
+        return finalTextContent ? finalTextContent.text : 'Cita procesada correctamente.';
       }
     }
     
@@ -408,6 +417,7 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     const { nombre_cliente, telefono, fecha, hora, propiedad, ubicacion, notas } = params;
     
     console.log(`📅 Agendando cita automática para ${nombre_cliente}...`);
+    console.log(`📋 Datos recibidos:`, { nombre_cliente, telefono, fecha, hora, propiedad, ubicacion });
     
     // Construir fechas ISO para Calendar
     const fechaInicio = new Date(`${fecha}T${hora}:00-06:00`); // Mexico City timezone
@@ -415,35 +425,59 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     
     // Validar que la fecha sea válida
     if (isNaN(fechaInicio.getTime())) {
-      throw new Error(`Fecha u hora inválida: ${fecha} ${hora}`);
+      console.error(`❌ Fecha u hora inválida: ${fecha} ${hora}`);
+      return {
+        success: false,
+        mensaje: `Fecha u hora inválida. Por favor verifica: ${fecha} ${hora}`
+      };
     }
     
-    // Crear evento en Google Calendar
-    const evento = await createCalendarEvent({
-      titulo: `Visita: ${propiedad}`,
-      descripcion: `Cliente: ${nombre_cliente}\nTeléfono: ${telefono || phoneNumber}\n\nNotas: ${notas || 'Sin notas adicionales'}`,
-      ubicacion: ubicacion || propiedad,
-      fechaInicio: fechaInicio.toISOString(),
-      fechaFin: fechaFin.toISOString(),
-      asistentes: []
-    });
+    console.log(`✅ Fechas calculadas: Inicio=${fechaInicio.toISOString()}, Fin=${fechaFin.toISOString()}`);
     
-    // Guardar también en Google Sheets para registro
+    // Guardar en Google Sheets primero (más confiable)
     const telefonoFinal = telefono || phoneNumber.replace('whatsapp:', '');
-    await saveToGoogleSheet({
-      nombre: nombre_cliente,
-      telefono: telefonoFinal,
-      email: '',
-      interes: propiedad,
-      notas: `Cita agendada: ${fecha} ${hora}. ${notas || ''}`
-    });
+    let sheetsSaved = false;
     
-    if (evento) {
-      console.log('✅ Cita agendada automáticamente:', evento.htmlLink);
+    try {
+      await saveToGoogleSheet({
+        nombre: nombre_cliente,
+        telefono: telefonoFinal,
+        email: '',
+        interes: propiedad,
+        notas: `Cita agendada: ${fecha} ${hora}. ${notas || ''}`
+      });
+      sheetsSaved = true;
+      console.log('✅ Datos guardados en Google Sheets');
+    } catch (error) {
+      console.error('⚠️  Error al guardar en Sheets (continuando):', error.message);
+    }
+    
+    // Intentar crear evento en Google Calendar
+    let evento = null;
+    try {
+      evento = await createCalendarEvent({
+        titulo: `Visita: ${propiedad}`,
+        descripcion: `Cliente: ${nombre_cliente}\nTeléfono: ${telefono || phoneNumber}\n\nNotas: ${notas || 'Sin notas adicionales'}`,
+        ubicacion: ubicacion || propiedad,
+        fechaInicio: fechaInicio.toISOString(),
+        fechaFin: fechaFin.toISOString(),
+        asistentes: []
+      });
+    } catch (error) {
+      console.error('⚠️  Error al crear evento en Calendar (continuando):', error.message);
+    }
+    
+    // Respuesta exitosa si al menos Sheets funcionó
+    if (sheetsSaved || evento) {
+      const mensaje = evento 
+        ? `Cita confirmada para ${fecha} a las ${hora}. Registro guardado exitosamente.`
+        : `Cita registrada para ${fecha} a las ${hora}. (Evento de calendario pendiente)`;
+      
+      console.log('✅ Cita agendada:', mensaje);
       return {
         success: true,
-        mensaje: `Cita confirmada para ${fecha} a las ${hora}`,
-        link: evento.htmlLink,
+        mensaje,
+        link: evento?.htmlLink,
         evento: {
           fecha,
           hora,
@@ -454,14 +488,15 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     } else {
       return {
         success: false,
-        mensaje: 'No se pudo crear la cita en el calendario'
+        mensaje: 'No se pudo guardar la cita. Verifica la configuración de Google.'
       };
     }
   } catch (error) {
-    console.error('❌ Error al agendar cita automática:', error);
+    console.error('❌ Error crítico al agendar cita automática:', error);
+    console.error('Stack:', error.stack);
     return {
       success: false,
-      mensaje: `Error: ${error.message}`
+      mensaje: `Error al procesar la cita: ${error.message}`
     };
   }
 }
