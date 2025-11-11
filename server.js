@@ -189,10 +189,11 @@ async function getChatResponse(userMessage, conversationHistory = []) {
     ];
     
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
-      messages: messages
+      messages: messages,
+      tools: CALENDAR_TOOLS
     });
     
     return response.content[0].text;
