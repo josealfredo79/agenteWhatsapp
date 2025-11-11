@@ -518,6 +518,63 @@ async function agendarCitaAutomatica(params, phoneNumber) {
   }
 }
 
+// Función para simular escritura y enviar mensaje con delay
+async function sendTypingAndMessage(to, from, message) {
+  try {
+    // Dividir mensaje en párrafos si es muy largo
+    const paragraphs = message.split('\n\n').filter(p => p.trim().length > 0);
+    
+    // Si el mensaje tiene múltiples párrafos, enviarlos con pausas entre ellos
+    if (paragraphs.length > 1 && message.length > 200) {
+      console.log(`📝 Enviando mensaje en ${paragraphs.length} partes con pausas...`);
+      
+      for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = paragraphs[i].trim();
+        
+        // Calcular tiempo de espera basado en la longitud del párrafo
+        const typingTime = Math.min(Math.max(paragraph.length / 20 * 1000, 1500), 4000); // Entre 1.5 y 4 segundos
+        
+        console.log(`⌛ Simulando escritura de párrafo ${i+1}/${paragraphs.length} (${(typingTime/1000).toFixed(1)}s)...`);
+        
+        // Esperar para simular que está escribiendo
+        await new Promise(resolve => setTimeout(resolve, typingTime));
+        
+        // Enviar párrafo
+        await twilioClient.messages.create({
+          from: from,
+          to: to,
+          body: paragraph
+        });
+        
+        console.log(`✅ Párrafo ${i+1}/${paragraphs.length} enviado`);
+        
+        // Pequeña pausa adicional entre párrafos (excepto después del último)
+        if (i < paragraphs.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+    } else {
+      // Mensaje corto o sin múltiples párrafos, enviar directo con una pausa
+      const typingTime = Math.min(Math.max(message.length / 15 * 1000, 2000), 5000); // Entre 2 y 5 segundos
+      
+      console.log(`⌛ Simulando escritura por ${(typingTime/1000).toFixed(1)} segundos...`);
+      
+      await new Promise(resolve => setTimeout(resolve, typingTime));
+      
+      await twilioClient.messages.create({
+        from: from,
+        to: to,
+        body: message
+      });
+      
+      console.log(`✅ Mensaje enviado después de simular escritura`);
+    }
+  } catch (error) {
+    console.error('❌ Error enviando mensaje:', error);
+    throw error;
+  }
+}
+
 // Webhook de Twilio para recibir mensajes de WhatsApp
 app.post('/webhook/whatsapp', async (req, res) => {
   const { From, Body, MessageSid } = req.body;
@@ -548,12 +605,12 @@ app.post('/webhook/whatsapp', async (req, res) => {
     );
     conversations.set(phoneNumber, history);
     
-    // Enviar respuesta por WhatsApp
-    await twilioClient.messages.create({
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-      to: From,
-      body: aiResponse
-    });
+    // Enviar respuesta por WhatsApp con simulación de escritura
+    await sendTypingAndMessage(
+      From, 
+      `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+      aiResponse
+    );
     
     // Emitir respuesta al frontend
     io.emit('new-message', {
