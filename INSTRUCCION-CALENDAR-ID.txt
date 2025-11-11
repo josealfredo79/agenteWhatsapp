@@ -1,0 +1,45 @@
+# 🔧 INSTRUCCIÓN IMPORTANTE: Actualizar GOOGLE_CALENDAR_ID en Railway
+
+## ⚠️ PROBLEMA ENCONTRADO
+
+El servidor se cae al intentar agendar citas porque `GOOGLE_CALENDAR_ID=primary` NO funciona con Service Accounts.
+
+## ✅ SOLUCIÓN
+
+Actualiza la variable en Railway Dashboard:
+
+1. Ve a Railway Dashboard > Tu proyecto > Variables
+2. Busca `GOOGLE_CALENDAR_ID`  
+3. Cambia el valor de `primary` a:
+
+```
+whatsapp-agent@gen-lang-client-0726897121.iam.gserviceaccount.com
+```
+
+4. Guarda y despliega
+
+## 📊 PRUEBAS REALIZADAS
+
+✅ Google Sheets: FUNCIONANDO (se guardan registros correctamente)
+✅ Google Calendar: FUNCIONANDO (con el Calendar ID correcto)
+✅ Service Account: Permisos correctos
+
+## 🎯 CAMBIOS EN EL CÓDIGO
+
+Ya corregidos y desplegados:
+- ✅ Modelo Claude actualizado a `claude-3-5-haiku-20241022`
+- ✅ Manejo de errores mejorado (no crashea si falla Calendar)
+- ✅ Logs detallados para debugging
+- ✅ Sheets tiene prioridad (más confiable)
+
+## 🚀 DESPUÉS DE ACTUALIZAR
+
+El sistema funcionará así:
+1. Usuario solicita agendar cita por WhatsApp
+2. Claude recopila: nombre, teléfono, fecha, hora, propiedad
+3. Usuario confirma
+4. Se guarda en Google Sheets ✅
+5. Se crea evento en Google Calendar ✅
+6. Usuario recibe confirmación por WhatsApp
+
+Railway redesplegará automáticamente al cambiar la variable.
