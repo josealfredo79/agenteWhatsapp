@@ -274,11 +274,11 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
     ];
     
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229', // Modelo estable con tool use
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: messages,
-      tools: CALENDAR_TOOLS // Agregar tools para agendar citas
+      tools: CALENDAR_TOOLS
     });
     
     // Verificar si Claude quiere usar una tool
