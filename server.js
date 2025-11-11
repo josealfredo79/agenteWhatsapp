@@ -392,6 +392,12 @@ async function createCalendarEvent(eventData) {
   }
   
   try {
+    console.log('📅 Creando evento en Google Calendar...');
+    console.log('   Calendar ID:', process.env.GOOGLE_CALENDAR_ID || 'NO CONFIGURADO');
+    console.log('   Título:', eventData.titulo);
+    console.log('   Fecha inicio:', eventData.fechaInicio);
+    console.log('   Fecha fin:', eventData.fechaFin);
+    
     const event = {
       summary: eventData.titulo || 'Visita a Propiedad',
       description: eventData.descripcion || '',
@@ -414,15 +420,26 @@ async function createCalendarEvent(eventData) {
       },
     };
     
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
+    console.log('🔧 Usando Calendar ID:', calendarId);
+    
     const response = await calendar.events.insert({
-      calendarId: process.env.GOOGLE_CALENDAR_ID,
+      calendarId: calendarId,
       resource: event,
     });
     
-    console.log('✅ Evento creado en Google Calendar:', response.data.htmlLink);
+    console.log('✅ Evento creado en Google Calendar');
+    console.log('   Event ID:', response.data.id);
+    console.log('   Link:', response.data.htmlLink);
+    console.log('   Status:', response.data.status);
+    
     return response.data;
   } catch (error) {
     console.error('❌ Error al crear evento en Calendar:', error.message);
+    console.error('   Código de error:', error.code);
+    if (error.response && error.response.data) {
+      console.error('   Detalles:', JSON.stringify(error.response.data, null, 2));
+    }
     return null;
   }
 }
