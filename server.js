@@ -388,13 +388,20 @@ async function saveToGoogleSheet(data) {
   }
   
   try {
+    // Orden correcto según las columnas del Google Sheet:
+    // A: Marca temporal
+    // B: Dirección de correo electrónico
+    // C: Nombre completo
+    // D: WhatsApp (con código país)
+    // E: ¿Qué servicio te interesa?
+    // F: Notas adicionales
     const values = [[
       new Date().toISOString(),
-      data.nombre || '',
-      data.telefono || '',
-      data.email || '',
-      data.interes || '',
-      data.notas || ''
+      data.email || '',           // B: Email
+      data.nombre || '',          // C: Nombre completo
+      data.telefono || '',        // D: WhatsApp
+      data.interes || '',         // E: Servicio de interés
+      data.notas || ''            // F: Notas
     ]];
     
     await sheets.spreadsheets.values.append({
