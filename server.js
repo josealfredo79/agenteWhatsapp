@@ -137,10 +137,6 @@ const CALENDAR_TOOLS = [
           type: "string",
           description: "Nombre completo del cliente"
         },
-        nombre_cliente: {
-          type: "string",
-          description: "Nombre completo del cliente"
-        },
         email: {
           type: "string",
           description: "Correo electrónico del cliente (OBLIGATORIO)"
