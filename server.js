@@ -137,6 +137,14 @@ const CALENDAR_TOOLS = [
           type: "string",
           description: "Nombre completo del cliente"
         },
+        nombre_cliente: {
+          type: "string",
+          description: "Nombre completo del cliente"
+        },
+        email: {
+          type: "string",
+          description: "Correo electrónico del cliente (OBLIGATORIO)"
+        },
         telefono: {
           type: "string",
           description: "Número de teléfono del cliente (incluir código de país si está disponible)"
@@ -162,7 +170,7 @@ const CALENDAR_TOOLS = [
           description: "Notas adicionales o comentarios sobre la cita"
         }
       },
-      required: ["nombre_cliente", "fecha", "hora", "propiedad"]
+      required: ["nombre_cliente", "email", "fecha", "hora", "propiedad"]
     }
   }
 ];
@@ -213,12 +221,13 @@ CAPACIDADES Y FUNCIONES:
 3. **Agendamiento de Citas AUTOMÁTICO**: Tienes la capacidad de AGENDAR AUTOMÁTICAMENTE visitas a propiedades usando la función "agendar_cita". 
 
 FLUJO DE AGENDAMIENTO DE CITAS:
-PASO 1: Cuando un cliente exprese interés en visitar una propiedad, solicita los siguientes datos:
-   - Nombre completo del cliente
-   - Número de teléfono (si no lo tienes del contexto)
-   - Fecha preferida (acepta formatos como "mañana", "próximo lunes", "15 de noviembre")
-   - Hora preferida (acepta formatos como "3 PM", "15:00", "a las tres")
-   - Propiedad específica de interés
+PASO 1: Cuando un cliente exprese interés en visitar una propiedad, solicita los siguientes datos EN ESTE ORDEN:
+   1. Nombre completo del cliente
+   2. Correo electrónico (OBLIGATORIO - siempre pregunta por el email)
+   3. Número de teléfono (si no lo tienes del contexto)
+   4. Fecha preferida (acepta formatos como "mañana", "próximo lunes", "15 de noviembre")
+   5. Hora preferida (acepta formatos como "3 PM", "15:00", "a las tres")
+   6. Propiedad específica de interés
 
 PASO 2: Convierte las fechas naturales a formato YYYY-MM-DD:
    - "mañana" → calcula la fecha de mañana
@@ -277,14 +286,14 @@ Tú: "¡Hola! 👋 Soy AsistenteTerrenos. ¿En qué puedo ayudarte hoy?"
 Cliente: "Buenos días"
 Tú: "¡Buenos días! 👋 Soy AsistenteTerrenos. ¿En qué puedo ayudarte hoy?"
 
-Cliente: "Hoy"
-Tú: "¡Hola! 👋 Soy AsistenteTerrenos. ¿En qué puedo ayudarte?"
-
 Cliente: "Me gustaría ver el terreno en Zapopan"
 Tú: "¡Perfecto! Me encantaría agendarte una visita. ¿Cuál es tu nombre completo?"
 
 Cliente: "José Alfredo Rodríguez"
-Tú: "Gracias, José. ¿Qué día te gustaría visitarlo?"
+Tú: "Gracias, José. ¿Cuál es tu correo electrónico?"
+
+Cliente: "jose@example.com"
+Tú: "Perfecto. ¿Qué día te gustaría visitarlo?"
 
 Cliente: "El viernes"
 Tú: "Entendido. ¿A qué hora prefieres?"
@@ -296,7 +305,7 @@ Cliente: "+52 333 123 4567"
 Tú: "¿Confirmas la visita al terreno en Zapopan el viernes 15 a las 3:00 PM?"
 
 Cliente: "Sí, confirmo"
-Tú: [USA agendar_cita] → "¡Listo! ✅ Cita confirmada para el viernes 15 a las 3:00 PM.
+Tú: [USA agendar_cita con email] → "¡Listo! ✅ Cita confirmada para el viernes 15 a las 3:00 PM.
 
 📅 Link: [LINK DEL EVENTO]
 
@@ -491,10 +500,10 @@ async function createCalendarEvent(eventData) {
 // Función para agendar cita automáticamente desde Claude
 async function agendarCitaAutomatica(params, phoneNumber) {
   try {
-    const { nombre_cliente, telefono, fecha, hora, propiedad, ubicacion, notas } = params;
+    const { nombre_cliente, email, telefono, fecha, hora, propiedad, ubicacion, notas } = params;
     
     console.log(`📅 Agendando cita automática para ${nombre_cliente}...`);
-    console.log(`📋 Datos recibidos:`, { nombre_cliente, telefono, fecha, hora, propiedad, ubicacion });
+    console.log(`📋 Datos recibidos:`, { nombre_cliente, email, telefono, fecha, hora, propiedad, ubicacion });
     
     // Construir fechas ISO para Calendar
     const fechaInicio = new Date(`${fecha}T${hora}:00-06:00`); // Mexico City timezone
@@ -519,7 +528,7 @@ async function agendarCitaAutomatica(params, phoneNumber) {
       await saveToGoogleSheet({
         nombre: nombre_cliente,
         telefono: telefonoFinal,
-        email: '',
+        email: email || '',
         interes: propiedad,
         notas: `Cita agendada: ${fecha} ${hora}. ${notas || ''}`
       });
