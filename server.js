@@ -398,6 +398,24 @@ async function createCalendarEvent(eventData) {
     console.log('   Fecha inicio:', eventData.fechaInicio);
     console.log('   Fecha fin:', eventData.fechaFin);
     
+    // Asegurar que el dueño del calendario esté como asistente para que vea el evento
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
+    const attendees = eventData.asistentes || [];
+    
+    // Si el calendar ID es un email, agregarlo como asistente principal
+    if (calendarId.includes('@') && calendarId !== 'primary') {
+      // Verificar que no esté ya en la lista
+      const ownerExists = attendees.some(a => a.email === calendarId);
+      if (!ownerExists) {
+        attendees.unshift({ 
+          email: calendarId,
+          organizer: true,
+          self: true,
+          responseStatus: 'accepted'
+        });
+      }
+    }
+    
     const event = {
       summary: eventData.titulo || 'Visita a Propiedad',
       description: eventData.descripcion || '',
@@ -410,7 +428,7 @@ async function createCalendarEvent(eventData) {
         dateTime: eventData.fechaFin,
         timeZone: 'America/Mexico_City',
       },
-      attendees: eventData.asistentes || [],
+      attendees: attendees,
       reminders: {
         useDefault: false,
         overrides: [
