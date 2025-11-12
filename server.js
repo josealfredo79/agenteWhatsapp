@@ -17,6 +17,8 @@ dotenv.config({ path: '.env' });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Version: 1.0.1 - Fixed calendarId duplication issue
+
 // Log de debug para Railway
 console.log('🔍 Verificando variables de entorno...');
 console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID ? '✅ Configurado' : '❌ NO configurado');
