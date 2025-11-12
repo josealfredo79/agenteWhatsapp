@@ -315,6 +315,8 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
         // Ejecutar la función de agendar
         const resultado = await agendarCitaAutomatica(toolUse.input, phoneNumber);
         
+        console.log('📋 Resultado de agendar_cita:', resultado);
+        
         // Continuar la conversación con el resultado
         const followUpMessages = [
           ...messages,
@@ -339,7 +341,11 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
         });
         
         const finalTextContent = finalResponse.content.find(block => block.type === 'text');
-        return finalTextContent ? finalTextContent.text : 'Cita procesada correctamente.';
+        const finalText = finalTextContent ? finalTextContent.text : 'Cita procesada correctamente.';
+        
+        console.log('✅ Respuesta final generada por Claude');
+        
+        return finalText;
       }
     }
     
@@ -398,7 +404,6 @@ async function createCalendarEvent(eventData) {
     console.log('   Fecha inicio:', eventData.fechaInicio);
     console.log('   Fecha fin:', eventData.fechaFin);
     
-    // Asegurar que el dueño del calendario esté como asistente para que vea el evento
     const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
     const attendees = eventData.asistentes || [];
     
@@ -436,14 +441,18 @@ async function createCalendarEvent(eventData) {
           { method: 'popup', minutes: 30 },
         ],
       },
+      // Forzar visibilidad del evento
+      visibility: 'default',
+      transparency: 'opaque',
+      status: 'confirmed'
     };
     
-    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
     console.log('🔧 Usando Calendar ID:', calendarId);
     
     const response = await calendar.events.insert({
       calendarId: calendarId,
       resource: event,
+      sendUpdates: 'all' // Enviar notificaciones a todos los asistentes
     });
     
     console.log('✅ Evento creado en Google Calendar');
@@ -617,6 +626,10 @@ app.post('/webhook/whatsapp', async (req, res) => {
   
   console.log(`📱 Mensaje recibido de ${phoneNumber}: ${Body}`);
   
+  // Responder inmediatamente a Twilio para evitar timeout
+  res.type('text/xml');
+  res.send('<Response></Response>');
+  
   // Obtener historial de conversación
   let history = conversations.get(phoneNumber) || [];
   
@@ -657,13 +670,8 @@ app.post('/webhook/whatsapp', async (req, res) => {
       direction: 'outbound'
     });
     
-    // Respuesta TwiML (requerida por Twilio)
-    res.type('text/xml');
-    res.send('<Response></Response>');
-    
   } catch (error) {
     console.error('Error procesando mensaje:', error);
-    res.status(500).send('Error');
   }
 });
 
@@ -751,12 +759,13 @@ io.on('connection', (socket) => {
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'; // Railway necesita escuchar en todas las interfaces
 
-httpServer.listen(PORT, async () => {
+httpServer.listen(PORT, HOST, async () => {
   console.log('\n🚀 Servidor iniciado correctamente\n');
-  console.log(`📡 Servidor HTTP: http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
-  console.log(`📱 Webhook URL: http://localhost:${PORT}/webhook/whatsapp`);
+  console.log(`📡 Servidor HTTP: http://0.0.0.0:${PORT}`);
+  console.log(`🔌 WebSocket: ws://0.0.0.0:${PORT}`);
+  console.log(`📱 Webhook URL: https://tu-app.railway.app/webhook/whatsapp`);
   console.log('\n📝 Configuración:');
   console.log(`   Twilio: ${process.env.TWILIO_WHATSAPP_NUMBER}`);
   console.log(`   Claude: Configurado`);
