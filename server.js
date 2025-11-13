@@ -474,6 +474,74 @@ async function saveToGoogleSheet(data) {
   }
 }
 
+// Función para guardar mensajes de WhatsApp en Google Sheets
+async function saveMessageToSheet(messageData) {
+  if (!sheets) {
+    console.warn('⚠️  Google Sheets no configurado para mensajes');
+    return false;
+  }
+  
+  try {
+    // Columnas: Timestamp | Teléfono | Dirección | Mensaje | MessageID
+    const values = [[
+      new Date().toISOString(),
+      messageData.telefono || '',
+      messageData.direccion || '',  // 'inbound' o 'outbound'
+      messageData.mensaje || '',
+      messageData.messageId || ''
+    ]];
+    
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: 'Mensajes!A:E',  // Hoja "Mensajes"
+      valueInputOption: 'USER_ENTERED',
+      resource: { values }
+    });
+    
+    return true;
+  } catch (error) {
+    // Si la hoja "Mensajes" no existe, intentar crearla
+    if (error.message.includes('Unable to parse range')) {
+      console.log('ℹ️  Creando hoja "Mensajes" en Google Sheets...');
+      try {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          resource: {
+            requests: [{
+              addSheet: {
+                properties: {
+                  title: 'Mensajes'
+                }
+              }
+            }]
+          }
+        });
+        
+        // Agregar encabezados
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'Mensajes!A1:E1',
+          valueInputOption: 'USER_ENTERED',
+          resource: {
+            values: [['Timestamp', 'Teléfono', 'Dirección', 'Mensaje', 'MessageID']]
+          }
+        });
+        
+        console.log('✅ Hoja "Mensajes" creada exitosamente');
+        
+        // Intentar guardar el mensaje nuevamente
+        return await saveMessageToSheet(messageData);
+      } catch (createError) {
+        console.error('❌ Error creando hoja "Mensajes":', createError.message);
+        return false;
+      }
+    }
+    
+    console.error('⚠️  Error al guardar mensaje en Sheets:', error.message);
+    return false;
+  }
+}
+
 // Función para crear evento en Google Calendar
 async function createCalendarEvent(eventData) {
   if (!calendar) {
@@ -754,6 +822,14 @@ app.post('/webhook/whatsapp', async (req, res) => {
   };
   dashboardMessages.get(phoneNumber).push(inboundMessage);
   
+  // Guardar mensaje entrante en Google Sheets
+  saveMessageToSheet({
+    telefono: phoneNumber,
+    direccion: 'inbound',
+    mensaje: Body,
+    messageId: MessageSid
+  }).catch(err => console.warn('⚠️  Error guardando mensaje entrante:', err.message));
+  
   // Emitir mensaje al frontend
   io.emit('new-message', inboundMessage);
   
@@ -785,6 +861,14 @@ app.post('/webhook/whatsapp', async (req, res) => {
       direction: 'outbound'
     };
     dashboardMessages.get(phoneNumber).push(outboundMessage);
+    
+    // Guardar mensaje saliente en Google Sheets
+    saveMessageToSheet({
+      telefono: phoneNumber,
+      direccion: 'outbound',
+      mensaje: aiResponse,
+      messageId: outboundMessage.id
+    }).catch(err => console.warn('⚠️  Error guardando mensaje saliente:', err.message));
     
     // Emitir respuesta al frontend
     io.emit('new-message', outboundMessage);
