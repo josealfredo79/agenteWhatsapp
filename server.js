@@ -602,22 +602,12 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Intentar crear evento en Google Calendar
     let evento = null;
     try {
-      // Configurar asistentes correctamente con validación estricta
+      // NOTA: Service Accounts no pueden enviar invitaciones sin Domain-Wide Delegation
+      // Por ahora, creamos eventos sin asistentes y incluimos el email en la descripción
       const asistentes = [];
       
-      // Validar email del cliente de forma estricta
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (email && emailRegex.test(email)) {
-        asistentes.push({ 
-          email: email,
-          responseStatus: 'needsAction'
-        });
-        console.log('📧 Email del cliente agregado como asistente:', email);
-      } else if (email) {
-        console.warn('⚠️  Email inválido, no se agregará como asistente:', email);
-      } else {
-        console.log('ℹ️  Sin email del cliente, solo se creará el evento sin asistentes');
-      }
+      console.log('ℹ️  Los Service Accounts no pueden enviar invitaciones automáticas');
+      console.log('   El email del cliente se incluirá en la descripción del evento');
       
       evento = await createCalendarEvent({
         titulo: `Visita: ${propiedad}`,
@@ -902,6 +892,7 @@ httpServer.listen(PORT, HOST, async () => {
   console.log(`   Claude: Configurado`);
   console.log(`   Google Docs: ${process.env.GOOGLE_DOCS_ID}`);
   console.log(`   Google Sheets: ${process.env.GOOGLE_SHEET_ID}`);
+  console.log(`   Google Calendar ID: ${process.env.GOOGLE_CALENDAR_ID || 'primary'}`);
   console.log('\n⏳ Cargando base de conocimiento...\n');
   
   await loadKnowledgeBase();
