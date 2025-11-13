@@ -2,6 +2,8 @@
 
 Sistema completo de atención al cliente vía WhatsApp usando Claude AI, con integración a Google Docs (base de conocimiento), Google Sheets (formularios) y Google Calendar (agendamiento de citas).
 
+> 💡 **¿Necesitas configurar el webhook de Twilio?** Lee la [Guía de Configuración del Webhook](INDICE-DOCUMENTACION-WEBHOOK.md) para instrucciones completas sobre cómo obtener la URL de Railway.
+
 ## 📋 Características
 
 - ✅ **Agente IA con Claude**: Respuestas inteligentes basadas en base de conocimiento
