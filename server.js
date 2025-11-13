@@ -479,27 +479,15 @@ async function createCalendarEvent(eventData) {
   
   try {
     console.log('📅 Creando evento en Google Calendar...');
-    console.log('   Calendar ID:', process.env.GOOGLE_CALENDAR_ID || 'NO CONFIGURADO');
     console.log('   Título:', eventData.titulo);
     console.log('   Fecha inicio:', eventData.fechaInicio);
     console.log('   Fecha fin:', eventData.fechaFin);
     
-    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
+    // USAR SIEMPRE tecnologicotlaxiaco@gmail.com como calendario principal
+    const calendarId = 'tecnologicotlaxiaco@gmail.com';
     const attendees = eventData.asistentes || [];
     
-    // Si el calendar ID es un email, agregarlo como asistente principal
-    if (calendarId.includes('@') && calendarId !== 'primary') {
-      // Verificar que no esté ya en la lista
-      const ownerExists = attendees.some(a => a.email === calendarId);
-      if (!ownerExists) {
-        attendees.unshift({ 
-          email: calendarId,
-          organizer: true,
-          self: true,
-          responseStatus: 'accepted'
-        });
-      }
-    }
+    console.log('📧 Asistentes configurados:', attendees.map(a => a.email).join(', '));
     
     const event = {
       summary: eventData.titulo || 'Visita a Propiedad',
@@ -595,14 +583,16 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Intentar crear evento en Google Calendar
     let evento = null;
     try {
-      // Agregar asistentes: TU email (principal) y el email del cliente
-      const asistentes = [
-        { email: 'tecnologicotlaxiaco@gmail.com', responseStatus: 'accepted', organizer: true }
-      ];
+      // Configurar asistentes correctamente
+      const asistentes = [];
       
-      // Agregar email del cliente si existe
-      if (email) {
-        asistentes.push({ email: email });
+      // Agregar email del cliente si existe y es válido
+      if (email && email.includes('@')) {
+        asistentes.push({ 
+          email: email,
+          responseStatus: 'needsAction'
+        });
+        console.log('📧 Email del cliente agregado como asistente:', email);
       }
       
       evento = await createCalendarEvent({
