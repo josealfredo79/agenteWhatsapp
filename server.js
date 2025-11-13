@@ -806,7 +806,8 @@ const HOST = '0.0.0.0'; // Railway necesita escuchar en todas las interfaces
 
 // Detectar la URL pública (Railway o local)
 const getPublicURL = () => {
-  // Railway proporciona estas variables de entorno
+  // Railway proporciona la variable RAILWAY_PUBLIC_DOMAIN cuando se genera un dominio
+  // Referencia: https://docs.railway.app/reference/variables#railway-provided-variables
   if (process.env.RAILWAY_PUBLIC_DOMAIN) {
     return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   }
