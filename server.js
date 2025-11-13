@@ -207,6 +207,8 @@ async function loadKnowledgeBase() {
 // Sistema de prompt profesional para Claude
 const SYSTEM_PROMPT = `Eres un asistente virtual profesional especializado en atención al cliente para una empresa de terrenos e inmuebles. Tu nombre es AsistenteTerrenos.
 
+FECHA ACTUAL: ${new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Mexico_City' })} (${new Date().toISOString().split('T')[0]})
+
 CONOCIMIENTOS BASE:
 ${knowledgeBase || 'Cargando base de conocimiento...'}
 
@@ -226,10 +228,12 @@ PASO 1: Cuando un cliente exprese interés en visitar una propiedad, solicita lo
    5. Hora preferida (acepta formatos como "3 PM", "15:00", "a las tres")
    6. Propiedad específica de interés
 
-PASO 2: Convierte las fechas naturales a formato YYYY-MM-DD:
-   - "mañana" → calcula la fecha de mañana
-   - "lunes próximo" → calcula el próximo lunes
-   - "15 de noviembre" → 2025-11-15
+PASO 2: Convierte las fechas naturales a formato YYYY-MM-DD usando la FECHA ACTUAL proporcionada arriba:
+   - "mañana" → suma 1 día a la fecha actual
+   - "lunes próximo" → calcula el próximo lunes desde la fecha actual
+   - "15 de noviembre" → 2025-11-15 (usa el año actual si no se especifica)
+   
+   IMPORTANTE: Siempre calcula las fechas basándote en la FECHA ACTUAL mostrada al inicio de este prompt.
 
 PASO 3: Convierte horas a formato 24h (HH:MM):
    - "3 PM" → "15:00"
@@ -530,12 +534,16 @@ async function createCalendarEvent(eventData) {
     
     return response.data;
   } catch (error) {
-    console.error('❌ Error al crear evento en Calendar:', error.message);
-    console.error('   Código de error:', error.code);
-    if (error.response && error.response.data) {
-      console.error('   Detalles:', JSON.stringify(error.response.data, null, 2));
+    console.error('❌ ERROR CRÍTICO al crear evento en Calendar');
+    console.error('   Mensaje:', error.message);
+    console.error('   Código:', error.code);
+    console.error('   Stack:', error.stack);
+    if (error.response) {
+      console.error('   Response status:', error.response.status);
+      console.error('   Response data:', JSON.stringify(error.response.data, null, 2));
     }
-    return null;
+    // Retornar null pero NO fallar silenciosamente
+    throw new Error(`Calendar error: ${error.message}`);
   }
 }
 
