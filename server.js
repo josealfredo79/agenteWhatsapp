@@ -579,8 +579,15 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Intentar crear evento en Google Calendar
     let evento = null;
     try {
-      // Agregar el email del cliente como asistente para que reciba notificaciones
-      const asistentes = email ? [{ email: email }] : [];
+      // Agregar asistentes: TU email (principal) y el email del cliente
+      const asistentes = [
+        { email: 'tecnologicotlaxiaco@gmail.com', responseStatus: 'accepted', organizer: true }
+      ];
+      
+      // Agregar email del cliente si existe
+      if (email) {
+        asistentes.push({ email: email });
+      }
       
       evento = await createCalendarEvent({
         titulo: `Visita: ${propiedad}`,
@@ -596,11 +603,20 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     
     // Respuesta exitosa si al menos Sheets funcionó
     if (sheetsSaved || evento) {
-      const mensaje = evento 
-        ? `Cita confirmada para ${fecha} a las ${hora}. ✅ Evento creado en Google Calendar.${evento.htmlLink ? '\n\n📅 Link del evento: ' + evento.htmlLink : ''}`
-        : `Cita registrada para ${fecha} a las ${hora}. (Evento de calendario pendiente)`;
+      let mensaje = `Cita confirmada para ${fecha} a las ${hora}.`;
+      
+      // Siempre incluir el link si el evento fue creado
+      if (evento && evento.htmlLink) {
+        mensaje += `\n\n📅 Link del calendario:\n${evento.htmlLink}\n\nTe hemos enviado una invitación a tu correo ${email}. También recibirás recordatorios automáticos.`;
+      } else if (evento) {
+        mensaje += '\n\nEvento creado. Te enviaremos recordatorios.';
+      } else {
+        mensaje = `Cita registrada para ${fecha} a las ${hora}.`;
+      }
       
       console.log('✅ Cita agendada:', mensaje);
+      console.log('📧 Notificaciones enviadas a: tecnologicotlaxiaco@gmail.com' + (email ? ` y ${email}` : ''));
+      
       return {
         success: true,
         mensaje,
