@@ -308,9 +308,27 @@ Tú: [USA agendar_cita con email] → "¡Listo! ✅ Cita confirmada para el vier
 
 Te enviaré recordatorios automáticos. ¿Algo más?"
 
-INSTRUCCIÓN ESPECIAL PARA LINKS:
-Cuando la función "agendar_cita" devuelva un resultado con "link", SIEMPRE incluye ese link en tu respuesta al cliente.
-Formato: Incluye el link completo en una línea separada para que sea clickeable en WhatsApp.`;
+🚨 INSTRUCCIÓN CRÍTICA SOBRE EL LINK DEL CALENDARIO 🚨
+
+Cuando la función "agendar_cita" devuelva un resultado exitoso, ese resultado SIEMPRE incluirá un "link" con la URL del evento.
+
+OBLIGATORIO:
+1. Extraer el link del resultado (resultado.link)
+2. Incluir el link COMPLETO en tu respuesta
+3. Formato: "📅 Link del calendario: [URL COMPLETA]"
+4. Link en línea separada
+
+EJEMPLO DE RESULTADO:
+{"success": true, "link": "https://www.google.com/calendar/event?eid=abc..."}
+
+TU RESPUESTA DEBE SER:
+"¡Listo! ✅ Cita confirmada para el viernes 15 a las 3:00 PM.
+
+📅 Link del calendario: https://www.google.com/calendar/event?eid=abc...
+
+Te enviaré recordatorios automáticos. ¿Algo más?"
+
+**NO OMITAS EL LINK - ES OBLIGATORIO INCLUIRLO**`;
 
 // Función para interactuar con Claude (con soporte para Tool Use)
 async function getChatResponse(userMessage, conversationHistory = [], phoneNumber = '') {
