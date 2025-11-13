@@ -120,7 +120,8 @@ try {
 }
 
 // Almacenamiento en memoria para conversaciones
-const conversations = new Map();
+const conversations = new Map(); // Historial para Claude
+const dashboardMessages = new Map(); // Mensajes para el dashboard
 
 // Base de conocimiento desde Google Docs
 let knowledgeBase = '';
@@ -662,14 +663,21 @@ app.post('/webhook/whatsapp', async (req, res) => {
   // Obtener historial de conversación
   let history = conversations.get(phoneNumber) || [];
   
-  // Emitir mensaje al frontend
-  io.emit('new-message', {
+  // Guardar mensaje entrante para el dashboard
+  if (!dashboardMessages.has(phoneNumber)) {
+    dashboardMessages.set(phoneNumber, []);
+  }
+  const inboundMessage = {
     id: MessageSid,
     from: phoneNumber,
     body: Body,
     timestamp: new Date().toISOString(),
     direction: 'inbound'
-  });
+  };
+  dashboardMessages.get(phoneNumber).push(inboundMessage);
+  
+  // Emitir mensaje al frontend
+  io.emit('new-message', inboundMessage);
   
   try {
     // Obtener respuesta de Claude (pasando phoneNumber para citas)
@@ -689,15 +697,19 @@ app.post('/webhook/whatsapp', async (req, res) => {
       aiResponse
     );
     
-    // Emitir respuesta al frontend
-    io.emit('new-message', {
+    // Guardar respuesta del bot para el dashboard
+    const outboundMessage = {
       id: Date.now().toString(),
       from: 'bot',
       to: phoneNumber,
       body: aiResponse,
       timestamp: new Date().toISOString(),
       direction: 'outbound'
-    });
+    };
+    dashboardMessages.get(phoneNumber).push(outboundMessage);
+    
+    // Emitir respuesta al frontend
+    io.emit('new-message', outboundMessage);
     
   } catch (error) {
     console.error('Error procesando mensaje:', error);
@@ -767,11 +779,13 @@ app.post('/api/send-message', async (req, res) => {
 });
 
 // Endpoint para obtener conversaciones
+// Endpoint para obtener conversaciones
 app.get('/api/conversations', (req, res) => {
-  const conversationList = Array.from(conversations.entries()).map(([phone, history]) => ({
+  const conversationList = Array.from(dashboardMessages.entries()).map(([phone, messages]) => ({
     phone,
-    lastMessage: history[history.length - 1]?.content || '',
-    messageCount: history.length
+    messages,
+    lastMessage: messages[messages.length - 1]?.body || '',
+    messageCount: messages.length
   }));
   
   res.json(conversationList);

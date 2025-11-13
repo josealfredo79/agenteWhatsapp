@@ -229,6 +229,19 @@ async function loadConversations() {
         const data = await response.json();
         
         console.log('📂 Conversaciones cargadas:', data);
+        
+        // Cargar cada conversación
+        data.forEach(conv => {
+            if (!conversations.has(conv.phone)) {
+                conversations.set(conv.phone, {
+                    phone: conv.phone,
+                    messages: conv.messages || []
+                });
+                totalMessagesCount += conv.messages?.length || 0;
+            }
+        });
+        
+        renderConversations();
     } catch (error) {
         console.error('Error cargando conversaciones:', error);
     }
