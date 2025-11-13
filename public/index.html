@@ -56,6 +56,71 @@
             opacity: 0.9;
         }
 
+        .search-box {
+            padding: 15px;
+            background: #f7f9fc;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .filters {
+            padding: 10px 15px;
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #e1e8ed;
+            background: white;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            background: #f7f9fc;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .clear-filters {
+            padding: 6px 12px;
+            border: none;
+            background: #ef4444;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .clear-filters:hover {
+            background: #dc2626;
+        }
+
         .conversations-list {
             flex: 1;
             overflow-y: auto;
@@ -294,6 +359,23 @@
                 <h1>💬 WhatsApp Panel</h1>
                 <p>Agente IA con Claude</p>
             </div>
+            
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="searchInput" 
+                    placeholder="🔍 Buscar conversaciones..."
+                />
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn" id="filterAll" data-filter="all">Todas</button>
+                <button class="filter-btn" id="filterToday" data-filter="today">Hoy</button>
+                <button class="filter-btn" id="filterWeek" data-filter="week">Esta semana</button>
+                <button class="clear-filters" id="clearFilters">Limpiar</button>
+            </div>
+
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-value" id="totalConversations">0</div>

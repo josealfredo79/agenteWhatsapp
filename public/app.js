@@ -15,10 +15,61 @@ const chatTitle = document.getElementById('chatTitle');
 const totalConversationsEl = document.getElementById('totalConversations');
 const totalMessagesEl = document.getElementById('totalMessages');
 const activeChatsEl = document.getElementById('activeChats');
+const searchInput = document.getElementById('searchInput');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const clearFiltersBtn = document.getElementById('clearFilters');
+
+// Estado de filtros
+let searchQuery = '';
+let dateFilter = 'all';
+let allConversations = new Map();
 
 // Formatear número de teléfono
 function formatPhoneNumber(phone) {
     return phone.replace(/[^\d]/g, '');
+}
+
+// Filtrar conversaciones
+function filterConversations() {
+    const filtered = new Map();
+    const now = Date.now();
+    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+    const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+    
+    allConversations.forEach((data, phone) => {
+        // Filtro de búsqueda
+        if (searchQuery) {
+            const phoneMatch = phone.toLowerCase().includes(searchQuery.toLowerCase());
+            const messageMatch = data.messages.some(msg => 
+                msg.body.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            
+            if (!phoneMatch && !messageMatch) {
+                return;
+            }
+        }
+        
+        // Filtro de fecha
+        if (dateFilter !== 'all') {
+            const lastMessage = data.messages[data.messages.length - 1];
+            if (!lastMessage) return;
+            
+            const messageTime = new Date(lastMessage.timestamp).getTime();
+            
+            if (dateFilter === 'today' && messageTime < oneDayAgo) {
+                return;
+            }
+            
+            if (dateFilter === 'week' && messageTime < oneWeekAgo) {
+                return;
+            }
+        }
+        
+        filtered.set(phone, data);
+    });
+    
+    conversations = filtered;
+    renderConversations();
 }
 
 // Renderizar conversaciones
@@ -111,21 +162,22 @@ function selectConversation(phone) {
 function addMessage(message) {
     const phone = message.direction === 'inbound' ? message.from : message.to;
     
-    if (!conversations.has(phone)) {
-        conversations.set(phone, {
+    if (!allConversations.has(phone)) {
+        allConversations.set(phone, {
             phone: phone,
             messages: []
         });
     }
     
-    conversations.get(phone).messages.push(message);
+    allConversations.get(phone).messages.push(message);
     totalMessagesCount++;
+    
+    // Aplicar filtros antes de renderizar
+    filterConversations();
     
     if (currentConversation === phone) {
         renderMessages();
     }
-    
-    renderConversations();
 }
 
 // Enviar mensaje
@@ -195,6 +247,32 @@ messageInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Búsqueda
+searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    filterConversations();
+});
+
+// Filtros de fecha
+filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        dateFilter = btn.dataset.filter;
+        filterConversations();
+    });
+});
+
+// Limpiar filtros
+clearFiltersBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    searchQuery = '';
+    dateFilter = 'all';
+    filterBtns.forEach(b => b.classList.remove('active'));
+    document.getElementById('filterAll').classList.add('active');
+    filterConversations();
+});
+
 // WebSocket Events
 socket.on('connect', () => {
     console.log('✅ Conectado al servidor');
@@ -230,10 +308,10 @@ async function loadConversations() {
         
         console.log('📂 Conversaciones cargadas:', data);
         
-        // Cargar cada conversación
+        // Cargar cada conversación en allConversations
         data.forEach(conv => {
-            if (!conversations.has(conv.phone)) {
-                conversations.set(conv.phone, {
+            if (!allConversations.has(conv.phone)) {
+                allConversations.set(conv.phone, {
                     phone: conv.phone,
                     messages: conv.messages || []
                 });
@@ -241,7 +319,10 @@ async function loadConversations() {
             }
         });
         
-        renderConversations();
+        // Activar filtro "Todas" por defecto
+        document.getElementById('filterAll').classList.add('active');
+        
+        filterConversations();
     } catch (error) {
         console.error('Error cargando conversaciones:', error);
     }
