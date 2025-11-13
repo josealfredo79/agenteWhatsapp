@@ -941,16 +941,82 @@ app.post('/api/send-message', async (req, res) => {
 });
 
 // Endpoint para obtener conversaciones
-// Endpoint para obtener conversaciones
-app.get('/api/conversations', (req, res) => {
-  const conversationList = Array.from(dashboardMessages.entries()).map(([phone, messages]) => ({
-    phone,
-    messages,
-    lastMessage: messages[messages.length - 1]?.body || '',
-    messageCount: messages.length
-  }));
-  
-  res.json(conversationList);
+app.get('/api/conversations', async (req, res) => {
+  try {
+    // Intentar cargar mensajes desde Google Sheets
+    if (sheets) {
+      try {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId: process.env.GOOGLE_SHEET_ID,
+          range: 'Mensajes!A2:E'  // Desde fila 2 para saltar encabezados
+        });
+        
+        const rows = response.data.values || [];
+        console.log(`📊 Cargados ${rows.length} mensajes desde Google Sheets`);
+        
+        // Agrupar mensajes por teléfono
+        const conversationsFromSheets = new Map();
+        
+        rows.forEach(row => {
+          const [timestamp, telefono, direccion, mensaje, messageId] = row;
+          
+          if (!telefono) return;
+          
+          if (!conversationsFromSheets.has(telefono)) {
+            conversationsFromSheets.set(telefono, []);
+          }
+          
+          conversationsFromSheets.get(telefono).push({
+            id: messageId || Date.now().toString(),
+            from: direccion === 'inbound' ? telefono : 'bot',
+            to: direccion === 'outbound' ? telefono : 'bot',
+            body: mensaje || '',
+            timestamp: timestamp || new Date().toISOString(),
+            direction: direccion || 'inbound'
+          });
+        });
+        
+        // Combinar con mensajes en memoria
+        dashboardMessages.forEach((messages, phone) => {
+          if (!conversationsFromSheets.has(phone)) {
+            conversationsFromSheets.set(phone, messages);
+          }
+        });
+        
+        // Convertir a array y ordenar mensajes por timestamp
+        const conversationList = Array.from(conversationsFromSheets.entries()).map(([phone, messages]) => {
+          // Ordenar mensajes por timestamp
+          messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          
+          return {
+            phone,
+            messages,
+            lastMessage: messages[messages.length - 1]?.body || '',
+            messageCount: messages.length
+          };
+        });
+        
+        console.log(`📱 Enviando ${conversationList.length} conversaciones al dashboard`);
+        res.json(conversationList);
+        return;
+      } catch (sheetsError) {
+        console.warn('⚠️  Error cargando desde Sheets, usando memoria:', sheetsError.message);
+      }
+    }
+    
+    // Fallback: usar solo memoria si Sheets falla
+    const conversationList = Array.from(dashboardMessages.entries()).map(([phone, messages]) => ({
+      phone,
+      messages,
+      lastMessage: messages[messages.length - 1]?.body || '',
+      messageCount: messages.length
+    }));
+    
+    res.json(conversationList);
+  } catch (error) {
+    console.error('❌ Error en /api/conversations:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // WebSocket para actualizaciones en tiempo real
