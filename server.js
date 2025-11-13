@@ -374,6 +374,22 @@ async function getChatResponse(userMessage, conversationHistory = [], phoneNumbe
         
         console.log('📋 Resultado de agendar_cita:', resultado);
         
+        // **ENVIAR LINK AUTOMÁTICAMENTE POR WHATSAPP SIN DEPENDER DE CLAUDE**
+        if (resultado.success && resultado.link) {
+          const mensajeConLink = `✅ ¡Cita confirmada!\n\n📅 Link del calendario:\n${resultado.link}\n\nTe hemos enviado una invitación a tu email. Recibirás recordatorios automáticos 24h antes y 30min antes de la cita.`;
+          
+          try {
+            await twilioClient.messages.create({
+              from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+              to: `whatsapp:${phoneNumber}`,
+              body: mensajeConLink
+            });
+            console.log('✅ Link del calendario enviado automáticamente por WhatsApp');
+          } catch (error) {
+            console.error('❌ Error enviando link por WhatsApp:', error);
+          }
+        }
+        
         // Continuar la conversación con el resultado
         const followUpMessages = [
           ...messages,
