@@ -331,3 +331,29 @@ async function loadConversations() {
 // Inicializar
 loadConversations();
 console.log('🚀 Aplicación inicializada');
+
+// Mobile menu
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+const sidebar = document.getElementById('sidebar');
+
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.add('mobile-active');
+    });
+}
+
+if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-active');
+    });
+}
+
+// Cerrar sidebar al seleccionar conversación en móvil
+const originalSelectConversation = selectConversation;
+selectConversation = function(phone) {
+    originalSelectConversation(phone);
+    if (window.innerWidth <= 768) {
+        sidebar.classList.remove('mobile-active');
+    }
+};
