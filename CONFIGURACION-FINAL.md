@@ -16,10 +16,24 @@ El sistema está **completamente operativo** y listo para recibir mensajes de Wh
 
 ## 🌐 URLs del Sistema
 
-### URL Pública del Webhook (para Twilio):
+### ⚠️ IMPORTANTE: Sobre la URL del Webhook
+
+La URL que ves a continuación (`https://agentewhatsapp.loca.lt/webhook/whatsapp`) es un **ejemplo con LocalTunnel** para desarrollo local. 
+
+**Para producción en Railway, la URL será diferente y única para tu proyecto.**
+
+📖 **Lee la [Guía de URL del Webhook](WEBHOOK-URL-GUIA.md) para saber cómo obtener TU URL específica.**
+
+### URL Pública del Webhook (EJEMPLO - LocalTunnel):
 ```
 https://agentewhatsapp.loca.lt/webhook/whatsapp
 ```
+
+**Para Railway (Producción):**
+```
+https://[tu-proyecto].up.railway.app/webhook/whatsapp
+```
+👉 Consulta [RAILWAY-DEPLOYMENT.md](RAILWAY-DEPLOYMENT.md) y [WEBHOOK-URL-GUIA.md](WEBHOOK-URL-GUIA.md)
 
 ### URLs Locales:
 - Servidor HTTP: `http://localhost:3000`

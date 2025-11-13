@@ -882,11 +882,33 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; // Railway necesita escuchar en todas las interfaces
 
+// Detectar la URL pública (Railway o local)
+const getPublicURL = () => {
+  // Railway proporciona la variable RAILWAY_PUBLIC_DOMAIN cuando se genera un dominio
+  // Referencia: https://docs.railway.app/reference/variables#railway-provided-variables
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  if (process.env.RAILWAY_STATIC_URL) {
+    return process.env.RAILWAY_STATIC_URL;
+  }
+  // Para desarrollo local
+  return `http://localhost:${PORT}`;
+};
+
 httpServer.listen(PORT, HOST, async () => {
+  const publicURL = getPublicURL();
+  const webhookURL = `${publicURL}/webhook/whatsapp`;
+  
   console.log('\n🚀 Servidor iniciado correctamente\n');
   console.log(`📡 Servidor HTTP: http://0.0.0.0:${PORT}`);
   console.log(`🔌 WebSocket: ws://0.0.0.0:${PORT}`);
-  console.log(`📱 Webhook URL: https://tu-app.railway.app/webhook/whatsapp`);
+  console.log(`🌐 URL Pública: ${publicURL}`);
+  console.log(`\n📱 URL del Webhook para Twilio:`);
+  console.log(`   ${webhookURL}`);
+  console.log(`\n💡 Copia esta URL y pégala en Twilio Console:`);
+  console.log(`   https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn`);
+  console.log(`   En el campo "When a message comes in", pega: ${webhookURL}`);
   console.log('\n📝 Configuración:');
   console.log(`   Twilio: ${process.env.TWILIO_WHATSAPP_NUMBER}`);
   console.log(`   Claude: Configurado`);
