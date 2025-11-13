@@ -17,7 +17,7 @@ dotenv.config({ path: '.env' });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Version: 1.0.1 - Fixed calendarId duplication issue
+// Version: 1.0.2 - Corrección del calendario: usar variable de entorno y validación de emails
 
 // Log de debug para Railway
 console.log('🔍 Verificando variables de entorno...');
@@ -487,11 +487,24 @@ async function createCalendarEvent(eventData) {
     console.log('   Fecha inicio:', eventData.fechaInicio);
     console.log('   Fecha fin:', eventData.fechaFin);
     
-    // USAR SIEMPRE tecnologicotlaxiaco@gmail.com como calendario principal
-    const calendarId = 'tecnologicotlaxiaco@gmail.com';
-    const attendees = eventData.asistentes || [];
+    // Usar el Calendar ID de la variable de entorno
+    const calendarId = process.env.GOOGLE_CALENDAR_ID || 'primary';
+    console.log('🔧 Calendar ID configurado:', calendarId);
     
-    console.log('📧 Asistentes configurados:', attendees.map(a => a.email).join(', '));
+    // Validar y filtrar asistentes con emails válidos
+    const attendees = (eventData.asistentes || []).filter(a => {
+      const isValid = a.email && a.email.includes('@') && a.email.includes('.');
+      if (!isValid && a.email) {
+        console.warn(`⚠️  Email inválido omitido: ${a.email}`);
+      }
+      return isValid;
+    });
+    
+    if (attendees.length > 0) {
+      console.log('📧 Asistentes válidos:', attendees.map(a => a.email).join(', '));
+    } else {
+      console.log('📧 Sin asistentes (solo se creará el evento)');
+    }
     
     const event = {
       summary: eventData.titulo || 'Visita a Propiedad',
@@ -518,8 +531,6 @@ async function createCalendarEvent(eventData) {
       transparency: 'opaque',
       status: 'confirmed'
     };
-    
-    console.log('🔧 Usando Calendar ID:', calendarId);
     
     const response = await calendar.events.insert({
       calendarId: calendarId,
@@ -591,16 +602,21 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Intentar crear evento en Google Calendar
     let evento = null;
     try {
-      // Configurar asistentes correctamente
+      // Configurar asistentes correctamente con validación estricta
       const asistentes = [];
       
-      // Agregar email del cliente si existe y es válido
-      if (email && email.includes('@')) {
+      // Validar email del cliente de forma estricta
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (email && emailRegex.test(email)) {
         asistentes.push({ 
           email: email,
           responseStatus: 'needsAction'
         });
         console.log('📧 Email del cliente agregado como asistente:', email);
+      } else if (email) {
+        console.warn('⚠️  Email inválido, no se agregará como asistente:', email);
+      } else {
+        console.log('ℹ️  Sin email del cliente, solo se creará el evento sin asistentes');
       }
       
       evento = await createCalendarEvent({
@@ -629,7 +645,12 @@ async function agendarCitaAutomatica(params, phoneNumber) {
       }
       
       console.log('✅ Cita agendada:', mensaje);
-      console.log('📧 Notificaciones enviadas a: tecnologicotlaxiaco@gmail.com' + (email ? ` y ${email}` : ''));
+      const calendarEmail = process.env.GOOGLE_CALENDAR_ID || 'calendario principal';
+      const recipients = [calendarEmail];
+      if (email && email.includes('@')) {
+        recipients.push(email);
+      }
+      console.log('📧 Notificaciones enviadas a:', recipients.join(' y '));
       
       return {
         success: true,
