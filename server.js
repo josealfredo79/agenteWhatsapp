@@ -579,13 +579,16 @@ async function agendarCitaAutomatica(params, phoneNumber) {
     // Intentar crear evento en Google Calendar
     let evento = null;
     try {
+      // Agregar el email del cliente como asistente para que reciba notificaciones
+      const asistentes = email ? [{ email: email }] : [];
+      
       evento = await createCalendarEvent({
         titulo: `Visita: ${propiedad}`,
-        descripcion: `Cliente: ${nombre_cliente}\nTeléfono: ${telefono || phoneNumber}\n\nNotas: ${notas || 'Sin notas adicionales'}`,
+        descripcion: `Cliente: ${nombre_cliente}\nEmail: ${email}\nTeléfono: ${telefono || phoneNumber}\n\nNotas: ${notas || 'Sin notas adicionales'}`,
         ubicacion: ubicacion || propiedad,
         fechaInicio: fechaInicio.toISOString(),
         fechaFin: fechaFin.toISOString(),
-        asistentes: []
+        asistentes: asistentes
       });
     } catch (error) {
       console.error('⚠️  Error al crear evento en Calendar (continuando):', error.message);
